@@ -13,12 +13,10 @@ package main
 //
 //		- All of this happens during a single search iteration.
 //
-// At no point is it necessary to check for contradictions (e.g. the same number appearing twice in a row)
-// because if this ever did occur, one cell would eliminate the number from its peers leaving the other cell
-// with no possibles at all (which is then detected and treated as a fail).
+// Still, the implementation is rather lacking in elegance. Really we should have a single clean Eliminate() function.
 //
-// NOTE: internally we do Sudoku with numbers 0-8.
-// The number 9 in puzzle source is converted to 0.
+// We also need premade lookup tables to get the units that a cell belongs to, as well as the peers of a cell, or maybe
+// just helper functions to compute both.
 
 import (
 	"fmt"
