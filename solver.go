@@ -2,7 +2,12 @@ package main
 
 // Sudoku solver with constraint propagation.
 // Loosely inspired by http://norvig.com/sudoku.html
-
+//
+// We do a depth first search. The trick really is that:
+//
+//		- Setting a value at x,y eliminates the value as a possibility among peers.
+//		- This can resolve some of the peers... which then eliminate possibles from *their* peers, recursively.
+//
 // Note internally we do Sudoku with numbers 0-8.
 // The number 9 in puzzle source is converted to 0.
 
@@ -130,13 +135,15 @@ func (self *Grid) Disallow(x, y, val int) {			// Disallow the value from x,y and
 
 func (self *Grid) Solve() *Grid {					// Returns the solved grid, or nil if there was no solution
 
-	x_index := -1									// These will be set to the x,y index of the cell with 
-	y_index := -1									// the smallest number of possibles, but greater than 1
-
+	x_index := -1
+	y_index := -1
 	got_zero := false
 	got_above_one := false
-
 	lowest_above_one := 999
+
+	// If there is a cell with zero possibles, our grid is illegal.
+	// If there are no cells with more than one possible, our grid is solved.
+	// Otherwise, we find the cell with the smallest number of possibles so we can test each in turn.
 
 	for x := 0; x < 9; x++ {
 		for y := 0; y < 9; y++ {
@@ -164,7 +171,7 @@ func (self *Grid) Solve() *Grid {					// Returns the solved grid, or nil if ther
 		return nil
 	} else if !got_above_one {						// The puzzle is solved
 		return self
-	} else {
+	} else {										// Try each possible for the chosen x,y in turn...
 
 		var possibles []int
 
@@ -175,13 +182,9 @@ func (self *Grid) Solve() *Grid {					// Returns the solved grid, or nil if ther
 		}
 
 		for _, n := range possibles {
-
 			foo := self.Copy()
-
 			foo.Set(x_index, y_index, n)
-
 			result := foo.Solve()
-
 			if result != nil {
 				return result
 			}
