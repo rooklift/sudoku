@@ -10,7 +10,7 @@ package main
 //		- NOTE: this recursive procedure is not the search itself, but merely one iteration of the search.
 //
 // At no point is it necessary to check for contradictions (e.g. the same number appearing twice in a row)
-// because if this ever did occur, one number would eliminate the other as a possible, leaving that cell
+// because if this ever did occur, one cell would eliminate the number from its peers leaving the other cell
 // with no possibles at all (which is then detected and treated as a fail).
 //
 // NOTE: internally we do Sudoku with numbers 0-8.
