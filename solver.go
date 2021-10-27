@@ -239,19 +239,13 @@ func (self *Grid) SetFromString(s string) {
 			}
 		}
 	}
-
-
 }
 
 func main() {
-
-	p := NewGrid()
-
-	p.SetFromString(PUZZLE)
-
-	p.Print()
-
-	solution := p.Solve()
+	grid := NewGrid()
+	grid.SetFromString(PUZZLE)
+	grid.Print()
+	solution := grid.Solve()
 	if solution == nil {
 		fmt.Printf("No solution found\n")
 	} else {
