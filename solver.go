@@ -77,29 +77,10 @@ func (self *Grid) Restrain(x, y, val int) {			// Eliminates val as a possibility
 
 	// Work out the boundaries of the 3x3 area we are in. We'll use non-inclusive boundaries I guess...
 
-	var startx, endx, starty, endy int
-
-	if x < 3 {
-		startx = 0
-		endx = 3
-	} else if x < 6 {
-		startx = 3
-		endx = 6
-	} else {
-		startx = 6
-		endx = 9
-	}
-
-	if y < 3 {
-		starty = 0
-		endy = 3
-	} else if y < 6 {
-		starty = 3
-		endy = 6
-	} else {
-		starty = 6
-		endy = 9
-	}
+	startx := (x / 3) * 3
+	endx := startx + 3
+	starty := (y / 3) * 3
+	endy := starty + 3
 
 	// Eliminate from the 3x3 area...
 
