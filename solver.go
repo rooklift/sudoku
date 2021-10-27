@@ -9,6 +9,10 @@ package main
 //		- This can resolve some of the peers... which then eliminate possibles from *their* peers, recursively.
 //		- NOTE: this recursive procedure is not the search itself, but merely one iteration of the search.
 //
+// At no point is it necessary to check for contradictions (e.g. the same number appearing twice in a row)
+// because if this ever did occur, one number would eliminate the other as a possible, leaving that cell
+// with no possibles at all (which is then detected and treated as a fail).
+//
 // NOTE: internally we do Sudoku with numbers 0-8.
 // The number 9 in puzzle source is converted to 0.
 
