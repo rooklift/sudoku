@@ -75,12 +75,10 @@ func (self *Grid) Restrain(x, y, val int) {			// Eliminates val as a possibility
 		}
 	}
 
-	// Work out the boundaries of the 3x3 area we are in...
+	// Eliminate from the 3x3 area...
 
 	startx := (x / 3) * 3
 	starty := (y / 3) * 3
-
-	// Eliminate from the 3x3 area...
 
 	for x3 := startx; x3 < startx + 3; x3++ {
 		for y3 := starty; y3 < starty + 3; y3++ {
