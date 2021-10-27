@@ -214,7 +214,7 @@ func (self *Grid) Print() {
 					if s == "" {
 						s = fmt.Sprintf("%d", n)
 						if s == "0" {
-							s = "9"
+							s = "9"					// Internally we use 0 instead of 9
 						}
 					} else {
 						s = "."
