@@ -18,11 +18,11 @@ package main
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 )
 
 const PUZZLE = "..5.2.6...9...4.1.2..5....3..6.3.......8.1.......9.4..3....2..7.1.9...5...4.6.8.."
+
+var steps int = 0
 
 type Grid struct {
 	cells	[9][9][9]bool							// Bools say whether their index is possible for the cell
@@ -117,6 +117,8 @@ func (self *Grid) Disallow(x, y, val int) {			// Disallow the value from x,y and
 
 func (self *Grid) Solve() *Grid {					// Returns the solved grid, or nil if there was no solution
 
+	steps++
+
 	x_index := -1
 	y_index := -1
 	got_zero := false
@@ -208,23 +210,37 @@ func (self *Grid) Print() {
 }
 
 func (self *Grid) SetFromString(s string) {
-	if len(s) != 81 {
+
+	var numbers []int
+
+	for _, c := range s {
+		if c == '.' || c == '0' {
+			numbers = append(numbers, -1)
+		} else if c >= '1' && c <= '9' {
+			numbers = append(numbers, int(c) - 48)
+		} else {
+			continue
+		}
+	}
+
+	if len(numbers) != 81 {
 		panic("Bad puzzle string")
 	}
-	len_1_strings := strings.Split(s, "")
+
 	for x := 0; x < 9; x++ {
 		for y := 0; y < 9; y++ {
 			index := y * 9 + x
-			val, err := strconv.Atoi(len_1_strings[index])
-			if err != nil || val == 0 {
+			if numbers[index] <= 0 {
 				continue
+			} else if numbers[index] == 9 {			// Internally we use 0 instead of 9
+				self.Set(x, y, 0)
+			} else {
+				self.Set(x, y, numbers[index])
 			}
-			if val == 9 {							// Internally we use 0 instead of 9
-				val = 0
-			}
-			self.Set(x, y, val)
 		}
 	}
+
+
 }
 
 func main() {
@@ -239,7 +255,7 @@ func main() {
 	if solution == nil {
 		fmt.Printf("No solution found\n")
 	} else {
-		fmt.Printf("Solution found...\n")
+		fmt.Printf("Solution found... (search tree size was %d)\n", steps)
 		solution.Print()
 	}
 }
