@@ -3,12 +3,13 @@ package main
 // Sudoku solver with constraint propagation.
 // Loosely inspired by http://norvig.com/sudoku.html
 //
-// We do a depth first search. The trick really is that:
+// We do a depth first search. The trick really is that, at each step of the search:
 //
 //		- Setting a value at x,y eliminates the value as a possibility among peers.
 //		- This can resolve some of the peers... which then eliminate possibles from *their* peers, recursively.
+//		- NOTE: this recursive procedure is not the search itself, but merely one iteration of the search.
 //
-// Note internally we do Sudoku with numbers 0-8.
+// NOTE: internally we do Sudoku with numbers 0-8.
 // The number 9 in puzzle source is converted to 0.
 
 import (
