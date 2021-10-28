@@ -9,6 +9,8 @@ package main
 //		- Eliminating a value can cause a cell to be solved, which then eliminates it from its peers.
 //		- Eliminating a value can cause that value to be forced into some other cell (the last remaining option).
 //		- The Eliminate() function is recursive, i.e. one elimination can trigger more eliminations.
+//
+// Note: internally we do Sudoku with numbers 0-8. The number nine in puzzles becomes our zero.
 
 import (
 	"fmt"
