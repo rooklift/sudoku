@@ -1,23 +1,5 @@
 package main
 
-// Sudoku solver with constraint propagation.
-// Loosely inspired by http://norvig.com/sudoku.html
-//
-// We do a depth first search. The trick really is that, at each step of the search:
-//
-//		- Setting a value at x,y eliminates the value as a possibility among peers.
-//		- This can resolve some of the peers... which then eliminate possibles from *their* peers, recursively.
-//
-//		- We also check whether a number is forced into a box by being eliminated from the other 8 boxes in a unit.
-//		- This likewise progagates constraints recursively.
-//
-//		- All of this happens during a single search iteration.
-//
-// Still, the implementation is rather lacking in elegance. Really we should have a single clean Eliminate() function.
-//
-// We also need premade lookup tables to get the units that a cell belongs to, as well as the peers of a cell, or maybe
-// just helper functions to compute both.
-
 import (
 	"fmt"
 	"io/ioutil"
@@ -26,9 +8,63 @@ import (
 
 var steps int = 0
 
+type Point struct {
+	x		int
+	y		int
+}
+
+// ------------------------------------------------------------------------------------------------
+// Peer lookup tables - a peer is a cell which is "seen" by a cell. Every cell sees 20 other cells.
+
+var lookup_peers [9][9][20]Point
+
+func init() {
+
+	for x := 0; x < 9; x++ {
+
+		for y := 0; y < 9; y++ {
+
+			var peers []Point
+
+			for x2 := 0; x2 < 9; x2++ {
+				if x2 != x {
+					peers = append(peers, Point{x2, y})
+				}
+			}
+
+			for y2 := 0; y2 < 9; y2++ {
+				if y2 != y {
+					peers = append(peers, Point{x, y2})
+				}
+			}
+
+			square_startx := (x / 3) * 3
+			square_starty := (y / 3) * 3
+
+			for x3 := square_startx; x3 < square_startx + 3; x3++ {
+				for y3 := square_starty; y3 < square_starty + 3; y3++ {
+					if x3 != x && y3 != y {
+						peers = append(peers, Point{x3, y3})
+					}
+				}
+			}
+
+			if len(peers) != 20 {
+				panic("Wat?")
+			}
+
+			for n := 0; n < 20; n++ {
+				lookup_peers[x][y][n] = peers[n]
+			}
+		}
+	}
+}
+
+// ------------------------------------------------------------------------------------------------
+// Grid - definition and creation...
+
 type Grid struct {
 	cells	[9][9][9]bool							// Bools say whether their index is possible for the cell
-	count	[9][9]int								// The number of possibles (trues) for the cell (kept up to date)
 }
 
 func NewGrid() *Grid {
@@ -38,7 +74,6 @@ func NewGrid() *Grid {
 			for n := 0; n < 9; n++ {
 				ret.cells[x][y][n] = true
 			}
-			ret.count[x][y] = 9
 		}
 	}
 	return ret
@@ -46,163 +81,73 @@ func NewGrid() *Grid {
 
 func (self *Grid) Copy() *Grid {
 	ret := new(Grid)
-	ret.cells = self.cells							// This works to copy the cells since we are only using
-	ret.count = self.count							// actual arrays (if it was slices it wouldn't work)
+	ret.cells = self.cells							// This works to copy the cells since we are only using actual arrays (if it was slices it wouldn't work)
 	return ret										
 }
 
-func (self *Grid) Set(x, y, val int) {				// Set the val as the only possibility for x,y
-	for n := 0; n < 9; n++ {						// then call Restrain() to propagate the consequences
-		if n == val {
-			self.cells[x][y][n] = true
-		} else {
-			self.cells[x][y][n] = false
+// ------------------------------------------------------------------------------------------------
+// Grid - manipulation and solving...
+
+func (self *Grid) Count(x, y int) int {				// The number of possibles at x,y - maybe optimise this away later
+	ret := 0
+	for n := 0; n < 9; n++ {
+		if self.cells[x][y][n] {
+			ret++
 		}
 	}
-	self.count[x][y] = 1
-	self.Restrain(x, y, val)
+	return ret
 }
 
-func (self *Grid) Restrain(x, y, val int) {			// Eliminates val as a possibility from the *peers* of x,y
-													// - calls Disallow() which can recursively call Restrain()
-	// Eliminate along the horizontal...
-
-	for x2 := 0; x2 < 9; x2++ {
-		if x != x2 {
-			self.Disallow(x2, y, val)
-		}
-	}
-
-	// Check whether doing that forced any number to be in a certain place (because it is allowed in only 1 box)...
-
+func (self *Grid) Value(x, y int) int {				// The value locked in to x,y, only valid iff Count(x,y) == 1
 	for n := 0; n < 9; n++ {
-
-		maybe_x := -1
-
-		for x2 := 0; x2 < 9; x2++ {
-			if self.cells[x2][y][n] {				// This cell is a possible location for n...
-				if self.count[x2][y] == 1 {			// This is already the certain location of n
-					maybe_x = -1
-					break
-				} else if maybe_x == -1 {			// First box we've seen where we might go
-					maybe_x = x2
-				} else {							// We've already seen one box where we could go
-					maybe_x = -1
-					break
-				}
-			}
-		}
-
-		if maybe_x != -1 {
-			if self.count[maybe_x][y] > 1 {
-				self.Set(maybe_x, y, n)
-			}
+		if self.cells[x][y][n] {
+			return n
 		}
 	}
-
-	// Eliminate along the vertical...
-
-	for y2 := 0; y2 < 9; y2++ {
-		if y != y2 {
-			self.Disallow(x, y2, val)
-		}
-	}
-
-	// Check whether doing that forced any number to be in a certain place (because it is allowed in only 1 box)...
-
-	for n := 0; n < 9; n++ {
-
-		maybe_y := -1
-
-		for y2 := 0; y2 < 9; y2++ {
-			if self.cells[x][y2][n] {				// This cell is a possible location for n...
-				if self.count[x][y2] == 1 {			// This is already the certain location of n
-					maybe_y = -1
-					break
-				} else if maybe_y == -1 {			// First box we've seen where we might go
-					maybe_y = y2
-				} else {							// We've already seen one box where we could go
-					maybe_y = -1
-					break
-				}
-			}
-		}
-
-		if maybe_y != -1 {
-			if self.count[x][maybe_y] > 1 {
-				self.Set(x, maybe_y, n)
-			}
-		}
-	}
-
-	// Eliminate from the 3x3 area...
-
-	startx := (x / 3) * 3
-	starty := (y / 3) * 3
-
-	for x3 := startx; x3 < startx + 3; x3++ {
-		for y3 := starty; y3 < starty + 3; y3++ {
-			if x3 != x || y3 != y {
-				self.Disallow(x3, y3, val)
-			}
-		}
-	}
-
-	// Check whether doing that forced any number to be in a certain place (because it is allowed in only 1 box)...
-
-	for n := 0; n < 9; n++ {
-
-		maybe_x := -1
-		maybe_y := -1
-
-		Outer:
-		for x3 := startx; x3 < startx + 3; x3++ {
-			for y3 := starty; y3 < starty + 3; y3++ {
-				if self.cells[x3][y3][n] {				// This cell is a possible location for n...
-					if self.count[x3][y3] == 1 {		// This is already the certain location of n
-						maybe_x = -1
-						maybe_y = -1
-						break Outer
-					} else if maybe_x == -1 && maybe_y == -1 {		// First box we've seen where we might go
-						maybe_x = x3
-						maybe_y = y3
-					} else {							// We've already seen one box where we could go
-						maybe_x = -1
-						maybe_y = -1
-						break Outer
-					}
-				}
-			}
-		}
-
-		if maybe_x != -1 && maybe_y != -1 {
-			if self.count[maybe_x][maybe_y] > 1 {
-				self.Set(maybe_x, maybe_y, n)
-			}
-		}
-	}
+	panic("Value() called but cell had zero possibles")
 }
 
-func (self *Grid) Disallow(x, y, val int) {			// Disallow the value from x,y and check if this resolves
-													// the cell (reduces it to 1 possible value) and if so,
-													// call Restrain() to propagate the consequences
+func (self *Grid) Possibles(x, y int) []int {		// List of all possible values for x,y
+	var ret []int
+	for n := 0; n < 9; n++ {
+		if self.cells[x][y][n] {
+			ret = append(ret, n)
+		}
+	}
+	return ret
+}
+
+func (self *Grid) Set(x, y, val int) {
 	if self.cells[x][y][val] == false {
-		return										// Do nothing if already forbidden
+		panic("Set() tried to set a value already ruled out.")
+	}
+	for n := 0; n < 9; n++ {
+		if n != val {
+			self.Eliminate(x, y, n)
+		}
+	}
+}
+
+func (self *Grid) Eliminate(x, y, val int) {
+
+	if self.cells[x][y][val] == false {
+		return
 	}
 
 	self.cells[x][y][val] = false
-	self.count[x][y]--
 
-	if self.count[x][y] == 1 {						// Cell is resolved, so propagate the consequences
-		goodval := -1
-		for n := 0; n < 9; n++ {
-			if self.cells[x][y][n] {
-				goodval = n
-				break
-			}
+	// Norvig strategy #1...
+
+	if self.Count(x, y) == 1 {
+		fixed_value := self.Value(x, y)
+		peers := lookup_peers[x][y]
+		for _, peer := range peers {
+			self.Eliminate(peer.x, peer.y, fixed_value)
 		}
-		self.Restrain(x, y, goodval)
 	}
+
+	// Norvig strategy #2...
+	// TODO
 }
 
 func (self *Grid) Solve() *Grid {					// Returns the solved grid, or nil if there was no solution
@@ -221,12 +166,7 @@ func (self *Grid) Solve() *Grid {					// Returns the solved grid, or nil if ther
 
 	for x := 0; x < 9; x++ {
 		for y := 0; y < 9; y++ {
-			count := 0
-			for n := 0; n < 9; n++ {
-				if self.cells[x][y][n] {
-					count++
-				}
-			}
+			count := self.Count(x, y)
 			if count == 0 {
 				got_zero = true
 			}
@@ -247,13 +187,7 @@ func (self *Grid) Solve() *Grid {					// Returns the solved grid, or nil if ther
 		return self
 	} else {										// Try each possible for the chosen x,y in turn...
 
-		var possibles []int
-
-		for n := 0; n < 9; n++ {
-			if self.cells[x_index][y_index][n] {
-				possibles = append(possibles, n)
-			}
-		}
+		possibles := self.Possibles(x_index, y_index)
 
 		for _, n := range possibles {
 			foo := self.Copy()
@@ -267,6 +201,9 @@ func (self *Grid) Solve() *Grid {					// Returns the solved grid, or nil if ther
 
 	return nil
 }
+
+// ------------------------------------------------------------------------------------------------
+// Grid - utility methods...
 
 func (self *Grid) Print() {
 	for y := 0; y < 9; y++ {
@@ -331,6 +268,8 @@ func (self *Grid) SetFromString(s string) {
 	}
 }
 
+// ------------------------------------------------------------------------------------------------
+
 func main() {
 
 	f, err := ioutil.ReadFile("puzzles.txt")
@@ -362,6 +301,7 @@ func main() {
 			steps = 0
 			solution.Print()
 		}
+
 	}
 }
 
