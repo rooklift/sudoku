@@ -1,5 +1,15 @@
 package main
 
+// Sudoku solver with constraint propagation.
+// Loosely inspired by http://norvig.com/sudoku.html
+//
+// We do a depth first search. The trick really is that, at each step of the search:
+//
+//		- The fundamental operation is eliminating a value as a possiblity.
+//		- Eliminating a value can cause a cell to be solved, which then eliminates it from its peers.
+//		- Eliminating a value can cause that value to be forced into some other cell (the last remaining option).
+//		- The Eliminate() function is recursive, i.e. one elimination can trigger more eliminations.
+
 import (
 	"fmt"
 	"io/ioutil"
@@ -216,21 +226,21 @@ func (self *Grid) Eliminate(x, y, val int) {
 	}
 
 	// Norvig strategy #2...
-	// For each unit containing x,y, the elimination may have forced val into some other square (the last option)
+	// For each unit containing x,y, the elimination may have forced val into some other square (if it's val's last option)
 
 	units := lookup_units[x][y]
 
 	for _, unit := range units {
 
-		count := 0
+		options := 0
 		for _, point := range unit {
 			if self.cells[point.x][point.y][val] {
-				count++
+				options++
 			}
 		}
 
-		if count == 1 {
-			for _, point := range unit {
+		if options == 1 {
+			for _, point := range unit {						// Find it again! Could optimise this away.
 				if self.cells[point.x][point.y][val] {
 					if self.Count(point.x, point.y) > 1 {		// i.e. this cell wasn't already solved
 						self.Set(point.x, point.y, val)
