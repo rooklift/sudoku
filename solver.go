@@ -409,29 +409,37 @@ func main() {
 
 	lines := strings.Split(string(f), "\n")
 
-	for n, line := range lines {
+	puzzle_id := 0
+	var fails []int
+
+	for _, line := range lines {
 
 		if len(line) < 81 {
 			continue
 		}
 
+		puzzle_id++
 		grid := NewGrid()
 		grid.SetFromString(line)
-
-		fmt.Printf("%d. New puzzle...\n", n)
+		fmt.Printf("%d. New puzzle...\n", puzzle_id)
 		grid.Print()
 
 		solution := grid.Solve()
 		
 		if solution == nil {
-			panic("No solution found")
+			fmt.Printf("No solution found! (search tree size was %d)\n", *grid.steps)
+			fails = append(fails, puzzle_id)
 		} else if solution.Validate() == false {
 			panic("Solution failed validation")
 		} else {
 			fmt.Printf("Solution found... (search tree size was %d)\n", *solution.steps)
 			solution.Print()
 		}
-
 	}
+
+	if len(fails) > 0 {
+		fmt.Printf("\nFailures: %v\n", fails)
+	}
+
 }
 
