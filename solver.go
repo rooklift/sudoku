@@ -18,8 +18,6 @@ import (
 	"strings"
 )
 
-var steps int = 0
-
 type Point struct {
 	x		int
 	y		int
@@ -144,7 +142,8 @@ func build_peer_tables() {
 // Grid - our main data structure, definition, creation, and validation...
 
 type Grid struct {
-	cells	[9][9][9]bool							// Bools say whether their index is possible for the cell
+	cells	[9][9][9]bool							// Bools say whether their index is possible for the cell.
+	steps	*int									// How many times Solve() is called. Shared between grids with the same origin.
 }
 
 func NewGrid() *Grid {
@@ -156,12 +155,14 @@ func NewGrid() *Grid {
 			}
 		}
 	}
+	ret.steps = new(int)
 	return ret
 }
 
 func (self *Grid) Copy() *Grid {
 	ret := new(Grid)
 	ret.cells = self.cells							// This works to copy the cells since we are only using actual arrays (if it was slices it wouldn't work)
+	ret.steps = self.steps							// Same pointer
 	return ret										
 }
 
@@ -278,7 +279,7 @@ func (self *Grid) Eliminate(x, y, val int) {
 
 func (self *Grid) Solve() *Grid {					// Returns the solved grid, or nil if there was no solution
 
-	steps++
+	*self.steps++
 
 	x_index := -1
 	y_index := -1
@@ -427,8 +428,7 @@ func main() {
 		} else if solution.Validate() == false {
 			panic("Solution failed validation")
 		} else {
-			fmt.Printf("Solution found... (search tree size was %d)\n", steps)
-			steps = 0
+			fmt.Printf("Solution found... (search tree size was %d)\n", *solution.steps)
 			solution.Print()
 		}
 
