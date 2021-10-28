@@ -34,7 +34,7 @@ var all_units [][]Point
 // Unit lookup tables - a unit is a set of 9 cells. Each cell belongs to 3 units.
 // There are a total of 27 units.
 
-func init() {
+func build_unit_tables() {
 
 	// Columns...
 
@@ -100,7 +100,7 @@ func init() {
 // ------------------------------------------------------------------------------------------------
 // Peer lookup tables - a peer is a cell which is "seen" by a cell. Every cell sees 20 other cells.
 
-func init() {
+func build_peer_tables() {
 
 	for x := 0; x < 9; x++ {
 
@@ -392,6 +392,11 @@ func (self *Grid) SetFromString(s string) {
 }
 
 // ------------------------------------------------------------------------------------------------
+
+func init() {
+	build_unit_tables()
+	build_peer_tables()
+}
 
 func main() {
 
