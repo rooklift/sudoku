@@ -338,21 +338,18 @@ func (self *Grid) Print() {
 			if x == 3 || x == 6 {
 				fmt.Printf(" |")
 			}
-			s := ""
+			s := "?"								// Used if no values found for the cell
 			for n := 0; n < 9; n++ {
 				if self.cells[x][y][n] {
-					if s == "" {
+					if s == "?" {					// This is the first possible seen
 						s = fmt.Sprintf("%d", n)
 						if s == "0" {
 							s = "9"					// Internally we use 0 instead of 9
 						}
-					} else {
+					} else {						// We have seen 2 or more possibles, so we'll display "."
 						s = "."
 					}
 				}
-			}
-			if s == "" {
-				s = "?"
 			}
 			fmt.Printf(" %s", s)
 		}
