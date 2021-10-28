@@ -129,7 +129,7 @@ func init() {
 }
 
 // ------------------------------------------------------------------------------------------------
-// Grid - definition and creation...
+// Grid - our main data structure, definition and creation...
 
 type Grid struct {
 	cells	[9][9][9]bool							// Bools say whether their index is possible for the cell
@@ -247,19 +247,17 @@ func (self *Grid) Solve() *Grid {					// Returns the solved grid, or nil if ther
 
 	x_index := -1
 	y_index := -1
-	got_zero := false
 	got_above_one := false
 	lowest_above_one := 999
 
-	// If there is a cell with zero possibles, our grid is illegal.
-	// If there are no cells with more than one possible, our grid is solved.
-	// Otherwise, we find the cell with the smallest number of possibles so we can test each in turn.
+	// Some counting of possibilities in cells...
+	// If we need to search, we find the cell with the smallest number of possibles so we can test each in turn.
 
 	for x := 0; x < 9; x++ {
 		for y := 0; y < 9; y++ {
 			count := self.Count(x, y)
 			if count == 0 {
-				got_zero = true
+				return nil							// We have a cell with zero possibles - grid is illegal
 			}
 			if count > 1 {
 				got_above_one = true
@@ -272,21 +270,20 @@ func (self *Grid) Solve() *Grid {					// Returns the solved grid, or nil if ther
 		}
 	}
 
-	if got_zero {									// We have a cell with zero possibles
-		return nil
-	} else if !got_above_one {						// The puzzle is solved
+	if !got_above_one {								// Every cell has exactly 1 possible - the puzzle is solved
 		return self
-	} else {										// Try each possible for the chosen x,y in turn...
+	}
 
-		possibles := self.Possibles(x_index, y_index)
+	// Try each possible for the chosen x,y in turn...
 
-		for _, n := range possibles {
-			foo := self.Copy()
-			foo.Set(x_index, y_index, n)
-			result := foo.Solve()
-			if result != nil {
-				return result
-			}
+	possibles := self.Possibles(x_index, y_index)
+
+	for _, n := range possibles {
+		foo := self.Copy()
+		foo.Set(x_index, y_index, n)
+		result := foo.Solve()
+		if result != nil {
+			return result
 		}
 	}
 
