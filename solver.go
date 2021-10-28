@@ -220,7 +220,7 @@ func (self *Grid) Possibles(x, y int) []int {		// List of all possible values fo
 
 func (self *Grid) Set(x, y, val int) {
 	if self.cells[x][y][val] == false {
-		panic("Set() tried to set a value already ruled out.")
+		panic("Set() tried to set a value already ruled out")
 	}
 	for n := 0; n < 9; n++ {
 		if n != val {
