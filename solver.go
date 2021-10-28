@@ -26,13 +26,13 @@ type Point struct {
 var lookup_units [9][9][][]Point					// Can retrieve the 3 units a cell belongs to.
 var lookup_peers [9][9][]Point						// Can retrieve the 20 peers a cell has.
 
+var all_units [][]Point
+
 // ------------------------------------------------------------------------------------------------
 // Unit lookup tables - a unit is a set of 9 cells. Each cell belongs to 3 units.
 // There are a total of 27 units.
 
 func init() {
-
-	var all_units [][]Point
 
 	// Columns...
 
@@ -139,7 +139,7 @@ func init() {
 }
 
 // ------------------------------------------------------------------------------------------------
-// Grid - our main data structure, definition and creation...
+// Grid - our main data structure, definition, creation, and validation...
 
 type Grid struct {
 	cells	[9][9][9]bool							// Bools say whether their index is possible for the cell
@@ -161,6 +161,29 @@ func (self *Grid) Copy() *Grid {
 	ret := new(Grid)
 	ret.cells = self.cells							// This works to copy the cells since we are only using actual arrays (if it was slices it wouldn't work)
 	return ret										
+}
+
+func (self *Grid) Validate() bool {					// Complete test of whether the solution is valid. Only used for sanity checking, not during search.
+
+	for x := 0; x < 9; x++ {
+		for y := 0; y < 9; y++ {
+			if self.Count(x, y) != 1 {
+				return false
+			}
+		}
+	}
+
+	for _, unit := range all_units {
+		set := make(map[int]bool)
+		for _, point := range unit {
+			set[self.Value(point.x, point.y)] = true
+		}
+		if len(set) != 9 {
+			return false
+		}
+	}
+
+	return true
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -394,6 +417,8 @@ func main() {
 		
 		if solution == nil {
 			panic("No solution found")
+		} else if solution.Validate() == false {
+			panic("Solution failed validation")
 		} else {
 			fmt.Printf("Solution found... (search tree size was %d)\n", steps)
 			steps = 0
