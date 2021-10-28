@@ -13,10 +13,80 @@ type Point struct {
 	y		int
 }
 
+var lookup_units [9][9][][]Point					// Can retrieve the 3 units a cell belongs to.
+var lookup_peers [9][9][]Point						// Can retrieve the 20 peers a cell has.
+
+// ------------------------------------------------------------------------------------------------
+// Unit lookup tables - a unit is a set of 9 cells. Each cell belongs to 3 units.
+// There are a total of 27 units.
+
+func init() {
+
+	var all_units [][]Point
+
+	// Columns...
+
+	for x := 0; x < 9; x++ {
+		var unit []Point
+		for y := 0; y < 9; y++ {
+			unit = append(unit, Point{x, y})
+		}
+		all_units = append(all_units, unit)
+	}
+
+	// Rows...
+
+	for y := 0; y < 9; y++ {
+		var unit []Point
+		for x := 0; x < 9; x++ {
+			unit = append(unit, Point{x, y})
+		}
+		all_units = append(all_units, unit)
+	}
+
+	// 3x3 squares...
+
+	for startx := 0; startx <= 6; startx += 3 {
+		for starty := 0; starty <= 6; starty += 3 {
+			var unit []Point
+			for x := startx; x < startx + 3; x++ {
+				for y := starty; y < starty + 3; y++ {
+					unit = append(unit, Point{x, y})
+				}
+			}
+			all_units = append(all_units, unit)
+		}
+	}
+
+	if len(all_units) != 27 {
+		panic("Wat?")
+	}
+
+	unit_contains := func(unit []Point, x, y int) bool {		// Helper function
+		for _, point := range unit {
+			if point.x == x && point.y == y {
+				return true
+			}
+		}
+		return false
+	}
+
+	for x := 0; x < 9; x++ {
+		for y := 0; y < 9; y++ {
+			for _, unit := range all_units {
+				if unit_contains(unit, x, y) {
+					lookup_units[x][y] = append(lookup_units[x][y], unit)
+				}
+			}
+			if len(lookup_units[x][y]) != 3 {
+				panic("Wat?")
+			}
+		}
+	}
+}
+
 // ------------------------------------------------------------------------------------------------
 // Peer lookup tables - a peer is a cell which is "seen" by a cell. Every cell sees 20 other cells.
-
-var lookup_peers [9][9][20]Point
 
 func init() {
 
@@ -53,9 +123,7 @@ func init() {
 				panic("Wat?")
 			}
 
-			for n := 0; n < 20; n++ {
-				lookup_peers[x][y][n] = peers[n]
-			}
+			lookup_peers[x][y] = peers
 		}
 	}
 }
@@ -137,6 +205,7 @@ func (self *Grid) Eliminate(x, y, val int) {
 	self.cells[x][y][val] = false
 
 	// Norvig strategy #1...
+	// If the cell now has only 1 value, it is fixed here and must be removed from all the peers...
 
 	if self.Count(x, y) == 1 {
 		fixed_value := self.Value(x, y)
@@ -147,7 +216,29 @@ func (self *Grid) Eliminate(x, y, val int) {
 	}
 
 	// Norvig strategy #2...
-	// TODO
+	// For each unit containing x,y, the elimination may have forced val into some other square (the last option)
+
+	units := lookup_units[x][y]
+
+	for _, unit := range units {
+
+		count := 0
+		for _, point := range unit {
+			if self.cells[point.x][point.y][val] {
+				count++
+			}
+		}
+
+		if count == 1 {
+			for _, point := range unit {
+				if self.cells[point.x][point.y][val] {
+					if self.Count(point.x, point.y) > 1 {		// i.e. this cell wasn't already solved
+						self.Set(point.x, point.y, val)
+					}
+				}
+			}
+		}
+	}
 }
 
 func (self *Grid) Solve() *Grid {					// Returns the solved grid, or nil if there was no solution
