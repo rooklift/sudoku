@@ -297,7 +297,7 @@ func parse_string(s string) map[string]string {
 		if c == '.' || c == '0' {
 			numstrings = append(numstrings, "")
 		} else if c >= '1' && c <= '9' {
-			numstrings = append(numstrings, fmt.Sprintf("%c", c))
+			numstrings = append(numstrings, string(c))
 		} else {
 			continue
 		}
