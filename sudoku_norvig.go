@@ -271,7 +271,7 @@ func search(values map[string]string) map[string]string {
 
 	for _, d := range values[search_square] {
 		foo := copy_map(values)
-		assign(foo, search_square, fmt.Sprintf("%c", d))
+		assign(foo, search_square, string(d))
 		result := search(foo)
 		if result != nil {
 			return result
