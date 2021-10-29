@@ -382,10 +382,7 @@ func (self *Grid) SetFromString(s string) {
 func init() {
 	build_unit_tables()
 	build_peer_tables()
-	run_tests()
-}
 
-func run_tests() {
 	if len(all_units) != 27 {
 		panic("all_units invalid")
 	}
