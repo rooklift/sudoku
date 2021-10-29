@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"strings"
+	"time"
 )
 
 type Point struct {
@@ -425,6 +426,8 @@ func main() {
 	puzzle_id := 0
 	var fails []int
 
+	start_time := time.Now()
+
 	for _, line := range lines {
 
 		if len(line) < 81 {
@@ -453,6 +456,8 @@ func main() {
 	if len(fails) > 0 {
 		fmt.Printf("\nFailures: %v\n", fails)
 	}
+
+	fmt.Printf("\nElapsed time: %v\n", time.Now().Sub(start_time))
 
 }
 
