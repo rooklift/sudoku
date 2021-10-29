@@ -344,6 +344,27 @@ func print(values map[string]string) {
 	}
 }
 
+func validate(values map[string]string) bool {
+
+	for _, d := range values {
+		if len(d) != 1 {
+			return false
+		}
+	}
+
+	for _, unit := range unitlist {
+		set := make(map[string]bool)
+		for _, d := range unit {
+			set[d] = true
+		}
+		if len(set) != 9 {
+			return false
+		}
+	}
+
+	return true
+}
+
 func main() {
 
 	f, err := ioutil.ReadFile("puzzles.txt")
@@ -375,6 +396,8 @@ func main() {
 		if solution == nil {
 			fmt.Printf("No solution found!\n")
 			fails = append(fails, puzzle_id)
+		} else if validate(solution) == false {
+			panic("Solution failed validation")
 		} else {
 			fmt.Printf("Solution found...\n")
 			print(solution)
