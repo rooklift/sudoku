@@ -312,9 +312,7 @@ func parse_string(s string) map[string]string {
 	for x := 0; x < 9; x++ {
 		for y := 0; y < 9; y++ {
 			index := y * 9 + x
-			if numstrings[index] == "" {
-				continue
-			} else {
+			if numstrings[index] != "" {
 				assign(ret, name[x][y], numstrings[index])
 			}
 		}
