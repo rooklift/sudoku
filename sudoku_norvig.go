@@ -15,23 +15,22 @@ var digits string = "123456789"
 var rows string = "ABCDEFGHI"		// Note this is quite unlike
 var cols string = digits			// Chess square names
 
+var name [9][9]string				// Lookup table: x, y --> name
+
 var squares []string				// The 81 names of the squares, e.g. "A1"
 var unitlist [][]string				// 27 units which are len-9 lists of squares
 
 var units map[string][][]string		// Lookup table: square --> units containing it
 var peers map[string][]string		// Lookup table: square --> peers it sees
 
-func name(x, y int) string {
-	return fmt.Sprintf("%c%c", rows[y], digits[x])
-}
-
 func init() {
 
-	// List of all 81 squares, using names like "A1" etc
+	// Names of squares
 
 	for x := 0; x < 9; x++ {
 		for y := 0; y < 9; y++ {
-			squares = append(squares, name(x, y))
+			name[x][y] = fmt.Sprintf("%c%c", rows[y], digits[x])
+			squares = append(squares, name[x][y])
 		}
 	}
 
@@ -40,7 +39,7 @@ func init() {
 	for x := 0; x < 9; x++ {
 		var unit []string
 		for y := 0; y < 9; y++ {
-			unit = append(unit, name(x, y))
+			unit = append(unit, name[x][y])
 		}
 		unitlist = append(unitlist, unit)
 	}
@@ -48,7 +47,7 @@ func init() {
 	for y := 0; y < 9; y++ {
 		var unit []string
 		for x := 0; x < 9; x++ {
-			unit = append(unit, name(x, y))
+			unit = append(unit, name[x][y])
 		}
 		unitlist = append(unitlist, unit)
 	}
@@ -58,7 +57,7 @@ func init() {
 			var unit []string
 			for x := startx; x < startx + 3; x++ {
 				for y := starty; y < starty + 3; y++ {
-					unit = append(unit, name(x, y))
+					unit = append(unit, name[x][y])
 				}
 			}
 			unitlist = append(unitlist, unit)
@@ -162,12 +161,13 @@ func assign(values map[string]string, s, d string) map[string]string {
 		panic("Invalid call to assign()")
 	}
 
-	other_values := strings.ReplaceAll(values[s], d, "")
-	other_list := strings.Split(other_values, "")
+	possibles := strings.Split(values[s], "")
 
-	for _, d2 := range other_list {
-		if eliminate(values, s, d2) == nil {
-			return nil
+	for _, d2 := range possibles {
+		if d2 != d {
+			if eliminate(values, s, d2) == nil {
+				return nil
+			}
 		}
 	}
 
@@ -315,7 +315,7 @@ func parse_string(s string) map[string]string {
 			if numstrings[index] == "" {
 				continue
 			} else {
-				assign(ret, name(x, y), numstrings[index])
+				assign(ret, name[x][y], numstrings[index])
 			}
 		}
 	}
@@ -333,10 +333,10 @@ func print(values map[string]string) {
 				fmt.Printf(" |")
 			}
 			s := "?"
-			if len(values[name(x, y)]) > 1 {
+			if len(values[name[x][y]]) > 1 {
 				s = "."
-			} else if len(values[name(x, y)]) == 1 {
-				s = values[name(x, y)]
+			} else if len(values[name[x][y]]) == 1 {
+				s = values[name[x][y]]
 			}
 			fmt.Printf(" %s", s)
 		}
