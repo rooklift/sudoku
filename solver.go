@@ -68,10 +68,6 @@ func build_unit_tables() {
 		}
 	}
 
-	if len(all_units) != 27 {
-		panic("Wat?")
-	}
-
 	unit_contains := func(unit []Point, x, y int) bool {		// Helper function
 		for _, point := range unit {
 			if point.x == x && point.y == y {
@@ -87,9 +83,6 @@ func build_unit_tables() {
 				if unit_contains(unit, x, y) {
 					lookup_units[x][y] = append(lookup_units[x][y], unit)
 				}
-			}
-			if len(lookup_units[x][y]) != 3 {
-				panic("Wat?")
 			}
 		}
 	}
@@ -127,10 +120,6 @@ func build_peer_tables() {
 						peers = append(peers, Point{x3, y3})
 					}
 				}
-			}
-
-			if len(peers) != 20 {
-				panic("Wat?")
 			}
 
 			lookup_peers[x][y] = peers
@@ -394,6 +383,33 @@ func (self *Grid) SetFromString(s string) {
 func init() {
 	build_unit_tables()
 	build_peer_tables()
+	run_tests()
+}
+
+func run_tests() {
+	if len(all_units) != 27 {
+		panic("all_units invalid")
+	}
+	for _, unit := range all_units {
+		if len(unit) != 9 {
+			panic("unit invalid")
+		}
+	}
+	for x := 0; x < 9; x++ {
+		for y := 0; y < 9; y++ {
+			if len(lookup_peers[x][y]) != 20 {
+				panic("peer list invalid")
+			}
+			if len(lookup_units[x][y]) != 3 {
+				panic("unit list invalid")
+			}
+			for _, unit := range lookup_units[x][y] {
+				if len(unit) != 9 {
+					panic("unit invalid")
+				}
+			}
+		}
+	}
 }
 
 func main() {
