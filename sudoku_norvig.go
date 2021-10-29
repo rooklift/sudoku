@@ -298,8 +298,6 @@ func parse_string(s string) map[string]string {
 			numstrings = append(numstrings, "")
 		} else if c >= '1' && c <= '9' {
 			numstrings = append(numstrings, string(c))
-		} else {
-			continue
 		}
 	}
 

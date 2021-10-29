@@ -356,8 +356,6 @@ func (self *Grid) SetFromString(s string) {
 			numbers = append(numbers, -1)
 		} else if c >= '1' && c <= '9' {
 			numbers = append(numbers, int(c) - 48)
-		} else {
-			continue
 		}
 	}
 
