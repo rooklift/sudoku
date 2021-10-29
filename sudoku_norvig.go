@@ -121,10 +121,7 @@ func init() {
 		}
 	}
 
-	run_tests()
-}
-
-func run_tests() {
+	// Tests
 
 	if len(squares) != 81 {
 		panic("squares invalid")
