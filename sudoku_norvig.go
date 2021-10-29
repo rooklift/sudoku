@@ -152,6 +152,22 @@ func init() {
 
 // ------------------------------------------------------------------------------------------------
 
+func new_map() map[string]string {
+	ret := make(map[string]string)
+	for _, s := range squares {
+		ret[s] = digits
+	}
+	return ret
+}
+
+func copy_map(values map[string]string) map[string]string {
+	ret := make(map[string]string)
+	for square, possibles := range values {
+		ret[square] = possibles
+	}
+	return ret
+}
+
 func assign(values map[string]string, s, d string) map[string]string {
 
 	if strings.Contains(values[s], d) == false {
@@ -226,14 +242,6 @@ func eliminate(values map[string]string, s, d string) map[string]string {
 	return values
 }
 
-func copy_map(m map[string]string) map[string]string {
-	ret := make(map[string]string)
-	for k, v := range m {
-		ret[k] = v
-	}
-	return ret
-}
-
 func search(values map[string]string) map[string]string {
 	
 	if values == nil {
@@ -276,14 +284,6 @@ func search(values map[string]string) map[string]string {
 	}
 
 	return nil
-}
-
-func new_map() map[string]string {
-	ret := make(map[string]string)
-	for _, s := range squares {
-		ret[s] = digits
-	}
-	return ret
 }
 
 func parse_string(s string) map[string]string {
